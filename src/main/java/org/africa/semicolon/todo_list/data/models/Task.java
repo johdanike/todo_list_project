@@ -17,8 +17,8 @@ public class Task {
     private String userId;
     private String title;
     private String description;
-    private Integer priority;
+    private String priority;
     private LocalDateTime createdAt;
-    private LocalDateTime deadline;
+    private String deadline;
     private Boolean completed;
 }
