@@ -47,19 +47,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public Boolean logout() {
-        User user = getCurrentUser();
+        User user = new User();
         user.setLoggedin(false);
         userRepository.save(user);
         return true;
     }
-
-    private User getCurrentUser() {
-        User user = new User();
-        if(userRepository.findByUsername(user.getUsername()) != null || user.isLoggedin()) {
-            return userRepository.findByUsername(user.getUsername());
+    private User getCurrentUser(String username) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found");
         }
         return user;
     }
+
 
     private void checkIfUserAlreadyExists(String username) {
         if (userRepository.findByUsername(username) != null && userRepository.findByUsername(username).getEmail() != null) {

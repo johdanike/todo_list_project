@@ -7,24 +7,23 @@ import org.africa.semicolon.todo_list.data.repositories.TaskRepository;
 import org.africa.semicolon.todo_list.data.repositories.UserRepository;
 import org.africa.semicolon.todo_list.dtos.requests.*;
 import org.africa.semicolon.todo_list.dtos.responses.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final AuthenticationServiceImpl authenticationServiceImpl;
     private final TaskRepository taskRepository;
+    private final NotificationServiceImpl notificationServiceImpl;
 
-    private NotificationServiceImpl notificationServiceImpl;
-    private AuthenticationService authenticationService;
-
-    public UserServiceImpl(UserRepository userRepository, AuthenticationServiceImpl authenticationServiceImpl, TaskRepository taskRepository) {
+    public UserServiceImpl(UserRepository userRepository, AuthenticationServiceImpl authenticationServiceImpl,
+                           TaskRepository taskRepository, NotificationServiceImpl notificationServiceImpl) {
         this.userRepository = userRepository;
         this.authenticationServiceImpl = authenticationServiceImpl;
         this.taskRepository = taskRepository;
+        this.notificationServiceImpl = notificationServiceImpl;
     }
 
     @Override
@@ -38,12 +37,6 @@ public class UserServiceImpl implements UserService {
         Task task = createNewTask(addTaskRequest);
 
 
-        addTaskRequest.setPriority(task.getPriority());
-        addTaskRequest.setDescription(task.getDescription());
-        addTaskRequest.setDeadline(task.getDeadline());
-        addTaskRequest.setTitle(task.getTitle());
-        addTaskRequest.setNotification(task.getNotification());
-
         Notification notification = getNotification(addTaskRequest);
         AddTaskResponse addTaskResponse = new AddTaskResponse();
         addTaskResponse.setTaskId(task.getId());
@@ -52,6 +45,8 @@ public class UserServiceImpl implements UserService {
         addTaskResponse.setUserId(task.getUserId());
         addTaskResponse.setMessage("Task successfully added");
         addTaskResponse.setNotification(notification);
+
+        notificationServiceImpl.setReminder(addTaskRequest);
         return addTaskResponse;
     }
 
@@ -66,7 +61,6 @@ public class UserServiceImpl implements UserService {
     }
 
     private Task createNewTask(AddTaskRequest addTaskRequest) {
-        User user = getCurrentUser();
         Task task = new Task();
         task.setTitle(addTaskRequest.getTitle());
         task.setDescription(addTaskRequest.getDescription());
@@ -74,7 +68,7 @@ public class UserServiceImpl implements UserService {
         task.setCreatedAt(LocalDateTime.now());
         task.setCompleted(false);
         task.setDeadline(addTaskRequest.getDeadline());
-        task.setUserId(user.getId());
+        task.setUserId(addTaskRequest.getUserId());
         task.setNotification(getNotification(addTaskRequest));
 
         taskRepository.save(task);
@@ -94,26 +88,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public CheckOutTaskResponse checkOutTask(CheckOutTaskRequest checkOutTaskRequest) {
-        getDetailsForTaskUpdate(checkOutTaskRequest);
-
         CheckOutTaskResponse checkOutTaskResponse = new CheckOutTaskResponse();
-        checkOutTaskResponse.setTaskId(checkOutTaskResponse.getTaskId());
+        checkOutTaskResponse.setTaskId(checkOutTaskRequest.getTaskId());
         checkOutTaskResponse.setCompleted(checkOutTaskRequest.getCompleted());
         checkOutTaskResponse.setTaskName(checkOutTaskRequest.getTitle());
         checkOutTaskResponse.setMessage("Task completed");
         return checkOutTaskResponse;
-    }
-
-    private void getDetailsForTaskUpdate(CheckOutTaskRequest checkOutTaskRequest) {
-        UpdateTaskRequest updateTaskRequest = new UpdateTaskRequest();
-        updateTaskRequest.setTitle(checkOutTaskRequest.getTitle());
-        updateTaskRequest.setTaskId(checkOutTaskRequest.getTaskId());
-        updateTaskRequest.setPriority(updateTaskRequest.getPriority());
-        updateTaskRequest.setDescription(updateTaskRequest.getDescription());
-        updateTaskRequest.setDeadline(updateTaskRequest.getDeadline());
-        updateTaskRequest.setCompleted(updateTaskRequest.getCompleted());
-
-        updateTask(updateTaskRequest);
     }
 
     @Override
@@ -131,9 +111,8 @@ public class UserServiceImpl implements UserService {
     }
 
     private Task getTask(UpdateTaskRequest updateTaskRequest) {
-        User user = getCurrentUser();
-        Task task = getCurrentTask();
-        task.setUserId(user.getId());
+        Task task = getCurrentTask(updateTaskRequest.getTitle());
+        task.setUserId(task.getUserId());
         task.setTitle(updateTaskRequest.getTitle());
         task.setDescription(updateTaskRequest.getDescription());
         task.setPriority(updateTaskRequest.getPriority());
@@ -148,18 +127,61 @@ public class UserServiceImpl implements UserService {
         return notificationServiceImpl.setReminder(addTaskRequest);
     }
 
-    private User getCurrentUser() {
-        User user = new User();
-        if(userRepository.findByUsername(user.getUsername()) != null || user.isLoggedin()) {
-            return userRepository.findByUsername(user.getUsername());
+    @Override
+    public boolean logOut() {
+        return authenticationServiceImpl.logout();
+    }
+
+    @Override
+    public ChangePasswordResponse changePassword(ChangePasswordRequest changePasswordRequest) {
+        User user = getCurrentUser(changePasswordRequest.getUsername());
+        if (user.isLoggedin()) {
+            if (user.getPassword().equals(changePasswordRequest.getOldPassword())
+                    && user.getUsername().equals(changePasswordRequest.getUsername())) {
+                if (!changePasswordRequest.getNewPassword().equals(changePasswordRequest.getConfirmPassword())) {
+                    throw new IllegalArgumentException("Passwords do not match");
+                }
+                user.setUsername(changePasswordRequest.getUsername());
+                user.setPassword(changePasswordRequest.getNewPassword());
+                user.setLoggedin(true);
+                User user1 = userRepository.save(user);
+                System.out.println(user1.getPassword());
+            }
+        }
+        return new ChangePasswordResponse();
+    }
+
+    @Override
+    public DeleteTaskResponse deleteTask(DeleteTaskRequest deleteTaskRequest) {
+        if (taskRepository.findTaskBy(deleteTaskRequest.getTaskName()) == null) {
+            throw new IllegalArgumentException("Task does not exist");
+        }
+        Task task = taskRepository.findTaskBy(deleteTaskRequest.getTaskName());
+        DeleteTaskResponse deleteTaskResponse = new DeleteTaskResponse();
+        deleteTaskResponse.setTaskId(task.getId());
+        deleteTaskResponse.setMessage("Task deleted successfully");
+        deleteTaskResponse.setTaskName(task.getTitle());
+        taskRepository.delete(task);
+        return new DeleteTaskResponse();
+    }
+
+    @Override
+    public List<Task> findAll() {
+        return taskRepository.findAll();
+    }
+
+    private User getCurrentUser(String username) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found");
         }
         return user;
     }
 
-    private Task getCurrentTask() {
-        Task task = new Task();
-        if (taskRepository.findTaskBy(task.getTitle()) != null) {
-            return taskRepository.findTaskBy(task.getTitle());
+    private Task getCurrentTask(String title) {
+        Task task = taskRepository.findTaskBy(title);
+        if (task == null) {
+            throw new IllegalArgumentException("Task not found");
         }
         return task;
     }

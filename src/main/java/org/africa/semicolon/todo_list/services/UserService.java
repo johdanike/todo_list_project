@@ -1,7 +1,10 @@
 package org.africa.semicolon.todo_list.services;
 
+import org.africa.semicolon.todo_list.data.models.Task;
 import org.africa.semicolon.todo_list.dtos.requests.*;
 import org.africa.semicolon.todo_list.dtos.responses.*;
+
+import java.util.List;
 
 public interface UserService {
     SignUpResponse signUp(SignUpRequest signUpRequest);
@@ -10,4 +13,8 @@ public interface UserService {
     CheckOutTaskResponse checkOutTask(CheckOutTaskRequest checkOutTaskRequest);
     UpdateTaskResponse updateTask(UpdateTaskRequest updateTaskRequest);
     AddTaskResponse getReminders(AddTaskRequest addTaskRequest);
+    boolean logOut();
+    ChangePasswordResponse changePassword(ChangePasswordRequest changePasswordRequest);
+    DeleteTaskResponse deleteTask(DeleteTaskRequest deleteTaskRequest);
+    List<Task> findAll();
 }

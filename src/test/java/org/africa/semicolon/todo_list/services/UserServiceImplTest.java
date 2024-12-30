@@ -1,21 +1,23 @@
 package org.africa.semicolon.todo_list.services;
 
+import org.africa.semicolon.todo_list.Enums.NoticeTypes;
 import org.africa.semicolon.todo_list.data.models.Notification;
+import org.africa.semicolon.todo_list.data.models.Task;
 import org.africa.semicolon.todo_list.data.repositories.TaskRepository;
 import org.africa.semicolon.todo_list.data.repositories.UserRepository;
 import org.africa.semicolon.todo_list.dtos.requests.*;
-import org.africa.semicolon.todo_list.dtos.responses.AddTaskResponse;
-import org.africa.semicolon.todo_list.dtos.responses.CheckOutTaskResponse;
-import org.africa.semicolon.todo_list.dtos.responses.SignUpResponse;
-import org.africa.semicolon.todo_list.dtos.responses.UpdateTaskResponse;
+import org.africa.semicolon.todo_list.dtos.responses.*;
+import org.africa.semicolon.todo_list.exceptions.InvalidUsernameOrPasswordException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+
 @SpringBootTest
 public class UserServiceImplTest {
     @Autowired
@@ -31,6 +33,7 @@ public class UserServiceImplTest {
     private LoginRequest loginRequest;
     private CheckOutTaskRequest checkOutTaskRequest;
     private UpdateTaskRequest updateTaskRequest;
+    private ChangePasswordRequest changePasswordRequest;
 
     @BeforeEach
     public void setUp() {
@@ -51,6 +54,7 @@ public class UserServiceImplTest {
         Notification notification = new Notification();
         notification.setStop(false);
         notification.setSnooze(false);
+        notification.setNoticeTypes(NoticeTypes.THIRTY_MINUTES_TO_TIME);
 
         addTaskRequest = new AddTaskRequest();
         addTaskRequest.setTitle("Finish my To-Do app build");
@@ -69,6 +73,12 @@ public class UserServiceImplTest {
         updateTaskRequest.setPriority("Average");
         updateTaskRequest.setDeadline("07/01/2024");
         updateTaskRequest.setCompleted(false);
+
+        changePasswordRequest = new ChangePasswordRequest();
+        changePasswordRequest.setUsername("username");
+        changePasswordRequest.setOldPassword(signUpRequest.getPassword());
+        changePasswordRequest.setNewPassword("johndaniel");
+        changePasswordRequest.setConfirmPassword("johndaniel");
 
     }
 
@@ -158,7 +168,7 @@ public class UserServiceImplTest {
     }
 
     @Test
-    public void tasksAddedSensNotification_test(){
+    public void tasksAdded_notificationCanBeSent_test(){
         SignUpResponse signUpResponse = userService.signUp(signUpRequest);
         assertNotNull(signUpResponse);
 
@@ -167,7 +177,101 @@ public class UserServiceImplTest {
         AddTaskResponse addTaskResponse = userService.addTask(addTaskRequest);
         assertNotNull(addTaskResponse);
         assertEquals(1, taskRepository.count());
+        boolean isSelected = true;
+        assertEquals("Approximately 30 minutes to complete task!", addTaskResponse.getNotification().getNoticeTypes().showMessage(isSelected));
+    }
+
+    @Test
+    public void loggedInUserCanLogOut_test(){
+        SignUpResponse signUpResponse = userService.signUp(signUpRequest);
+        assertNotNull(signUpResponse);
+        assertTrue(userService.login(loginRequest));
+        AddTaskResponse addTaskResponse = userService.addTask(addTaskRequest);
+        assertNotNull(addTaskResponse);
+        assertEquals(1, taskRepository.count());
+        assertTrue(userService.logOut());
+    }
+
+    @Test
+    public void userCanChangePassword_test(){
+        SignUpResponse signUpResponse = userService.signUp(signUpRequest);
+        assertNotNull(signUpResponse);
+
+        assertTrue(userService.login(loginRequest));
+
+        ChangePasswordResponse changePasswordResponse = userService.changePassword(changePasswordRequest);
+        assertNotNull(changePasswordResponse);
+    }
+
+    @Test
+    public void userCanLoginWithNewPassword_test(){
+        SignUpResponse signUpResponse = userService.signUp(signUpRequest);
+        assertNotNull(signUpResponse);
+
+        assertTrue(userService.login(loginRequest));
+
+        ChangePasswordResponse changePasswordResponse = userService.changePassword(changePasswordRequest);
+        assertNotNull(changePasswordResponse);
+
+        LoginRequest loginRequest = new LoginRequest();
+        loginRequest.setUsername("username");
+        loginRequest.setPassword("johndaniel");
+        assertTrue(userService.login(loginRequest));
+    }
+
+    @Test
+    public void userCannotLoginWithOldPassword_test(){
+        SignUpResponse signUpResponse = userService.signUp(signUpRequest);
+        assertNotNull(signUpResponse);
+
+        assertTrue(userService.login(loginRequest));
+        ChangePasswordResponse changePasswordResponse = userService.changePassword(changePasswordRequest);
+        assertNotNull(changePasswordResponse);
+
+        LoginRequest loginRequest1 = new LoginRequest();
+        loginRequest1.setUsername("username");
+        loginRequest1.setPassword("password");
+        InvalidUsernameOrPasswordException exception = assertThrows(InvalidUsernameOrPasswordException.class, ()->userService.login(loginRequest));
+        assertEquals("Invalid username or password", exception.getMessage());
+    }
+
+    @Test
+    public void userCanDeleteTask_test(){
+        SignUpResponse signUpResponse = userService.signUp(signUpRequest);
+        assertNotNull(signUpResponse);
+
+        assertTrue(userService.login(loginRequest));
+
+        AddTaskResponse addTaskResponse = userService.addTask(addTaskRequest);
+        assertNotNull(addTaskResponse);
+
+        DeleteTaskRequest deleteTaskRequest = new DeleteTaskRequest();
+        deleteTaskRequest.setTaskId(addTaskResponse.getTaskId());
+        deleteTaskRequest.setTaskName(addTaskResponse.getTaskName());
+        deleteTaskRequest.setMessage("Task deleted successfully");
+        DeleteTaskResponse deleteTaskResponse = userService.deleteTask(deleteTaskRequest);
+        assertNotNull(deleteTaskResponse);
+        assertEquals(0, taskRepository.count());
 
 
+        List<Task> tasks = taskRepository.findAll();
+        assertNotNull(tasks);
+        assertEquals(0, tasks.size());
+    }
+
+    @Test
+    public void userCanViewAllTasks_test(){
+        SignUpResponse signUpResponse = userService.signUp(signUpRequest);
+        assertNotNull(signUpResponse);
+        assertEquals(1, userRepository.count());
+
+        assertTrue(userService.login(loginRequest));
+        AddTaskResponse addTaskResponse = userService.addTask(addTaskRequest);
+        assertNotNull(addTaskResponse);
+
+        List<Task> tasks = userService.findAll();
+        assertNotNull(tasks);
+        System.out.println(tasks);
+        assertEquals(1, tasks.size());
     }
 }

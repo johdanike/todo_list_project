@@ -12,4 +12,5 @@ public class AddTaskRequest {
     private String priority;
     private Notification notification;
     private String deadline;
+    private String userId;
 }
