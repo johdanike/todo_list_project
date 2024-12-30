@@ -1,7 +1,6 @@
 package org.africa.semicolon.todo_list.services;
 
-import org.africa.semicolon.todo_list.data.models.Reminder;
-import org.africa.semicolon.todo_list.data.models.Task;
+import org.africa.semicolon.todo_list.data.models.Notification;
 import org.africa.semicolon.todo_list.data.repositories.TaskRepository;
 import org.africa.semicolon.todo_list.data.repositories.UserRepository;
 import org.africa.semicolon.todo_list.dtos.requests.*;
@@ -49,16 +48,15 @@ public class UserServiceImplTest {
         loginRequest.setUsername("username");
         loginRequest.setPassword("password");
 
-        Reminder reminder = new Reminder();
-        reminder.setDate(LocalDateTime.now());
-        reminder.setStop(false);
-        reminder.setSnooze(false);
+        Notification notification = new Notification();
+        notification.setStop(false);
+        notification.setSnooze(false);
 
         addTaskRequest = new AddTaskRequest();
         addTaskRequest.setTitle("Finish my To-Do app build");
         addTaskRequest.setDescription("description");
         addTaskRequest.setPriority("high");
-        addTaskRequest.setReminder(reminder);
+        addTaskRequest.setNotification(notification);
         addTaskRequest.setDeadline("31/12/2024");
 
         checkOutTaskRequest = new CheckOutTaskRequest();
@@ -152,14 +150,11 @@ public class UserServiceImplTest {
         AddTaskResponse addTaskResponse = userService.addTask(addTaskRequest);
         assertNotNull(addTaskResponse);
 
-        updateTaskRequest.setUserId(addTaskResponse.getUserId());
         updateTaskRequest.setTaskId(addTaskResponse.getTaskId());
         UpdateTaskResponse updateTaskResponse = userService.updateTask(updateTaskRequest);
         assertTrue(updateTaskResponse != null);
         assertEquals("Task update Successful", updateTaskResponse.getMessage());
-
-
-
+        assertEquals(1, taskRepository.count());
     }
 
     @Test

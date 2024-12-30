@@ -6,6 +6,7 @@ import lombok.Setter;
 @Setter
 @Getter
 public class CheckOutTaskRequest {
+    private String userId;
     private String taskId;
     private String title;
     private Boolean completed;

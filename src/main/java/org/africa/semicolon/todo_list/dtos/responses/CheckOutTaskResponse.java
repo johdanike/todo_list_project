@@ -8,6 +8,6 @@ import lombok.Setter;
 public class CheckOutTaskResponse {
     private String taskId;
     private String taskName;
-    private boolean completed;
+    private Boolean completed;
     private String message;
 }

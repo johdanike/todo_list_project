@@ -21,4 +21,5 @@ public class Task {
     private LocalDateTime createdAt;
     private String deadline;
     private Boolean completed;
+    private Notification notification;
 }
