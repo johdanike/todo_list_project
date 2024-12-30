@@ -12,7 +12,7 @@ public interface UserService {
     boolean login(LoginRequest loginRequest);
     CheckOutTaskResponse checkOutTask(CheckOutTaskRequest checkOutTaskRequest);
     UpdateTaskResponse updateTask(UpdateTaskRequest updateTaskRequest);
-    AddTaskResponse getReminders(AddTaskRequest addTaskRequest);
+    AddTaskResponse setReminders(AddTaskRequest addTaskRequest);
     boolean logOut();
     ChangePasswordResponse changePassword(ChangePasswordRequest changePasswordRequest);
     DeleteTaskResponse deleteTask(DeleteTaskRequest deleteTaskRequest);

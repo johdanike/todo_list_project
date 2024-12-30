@@ -4,6 +4,7 @@ import org.africa.semicolon.todo_list.data.models.User;
 import org.africa.semicolon.todo_list.data.repositories.UserRepository;
 import org.africa.semicolon.todo_list.dtos.requests.LoginRequest;
 import org.africa.semicolon.todo_list.dtos.requests.SignUpRequest;
+import org.africa.semicolon.todo_list.dtos.responses.LoginResponse;
 import org.africa.semicolon.todo_list.dtos.responses.SignUpResponse;
 import org.africa.semicolon.todo_list.exceptions.InvalidUsernameOrPasswordException;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (user == null || !user.getPassword().equals(loginRequest.getPassword()) || !user.getUsername().equals(loginRequest.getUsername())) {
             throw new InvalidUsernameOrPasswordException("Invalid username or password");
         }
+        LoginResponse loginResponse = new LoginResponse();
+        loginResponse.setMessage("Login successful");
+        loginResponse.setUsername(user.getUsername());
+
         user.setLoggedin(true);
         userRepository.save(user);
         return user.isLoggedin();

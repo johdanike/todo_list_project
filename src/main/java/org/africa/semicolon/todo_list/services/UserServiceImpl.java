@@ -1,6 +1,5 @@
 package org.africa.semicolon.todo_list.services;
 
-import org.africa.semicolon.todo_list.data.models.Notification;
 import org.africa.semicolon.todo_list.data.models.Task;
 import org.africa.semicolon.todo_list.data.models.User;
 import org.africa.semicolon.todo_list.data.repositories.TaskRepository;
@@ -36,28 +35,16 @@ public class UserServiceImpl implements UserService {
         checkIfTaskExisted(addTaskRequest.getTitle());
         Task task = createNewTask(addTaskRequest);
 
-
-        Notification notification = getNotification(addTaskRequest);
         AddTaskResponse addTaskResponse = new AddTaskResponse();
         addTaskResponse.setTaskId(task.getId());
-        addTaskResponse.setTaskDescription(task.getDescription());
-        addTaskResponse.setTaskName(task.getTitle());
-        addTaskResponse.setUserId(task.getUserId());
+        addTaskResponse.setTaskDescription(addTaskRequest.getDescription());
+        addTaskResponse.setTaskName(addTaskRequest.getTitle());
+        addTaskResponse.setUserId(addTaskRequest.getUserId());
         addTaskResponse.setMessage("Task successfully added");
-        addTaskResponse.setNotification(notification);
+        addTaskResponse.setNotification(addTaskRequest.getNotification());
 
-        notificationServiceImpl.setReminder(addTaskRequest);
+        setReminders(addTaskRequest);
         return addTaskResponse;
-    }
-
-    private static Notification getNotification(AddTaskRequest addTaskRequest) {
-        Notification notification = new Notification();
-        notification.setSnooze(addTaskRequest.getNotification().getSnooze());
-        notification.setStop(addTaskRequest.getNotification().getStop());
-        notification.setTaskId(addTaskRequest.getNotification().getTaskId());
-        notification.setNoticeTypes(addTaskRequest.getNotification().getNoticeTypes());
-
-        return notification;
     }
 
     private Task createNewTask(AddTaskRequest addTaskRequest) {
@@ -69,7 +56,7 @@ public class UserServiceImpl implements UserService {
         task.setCompleted(false);
         task.setDeadline(addTaskRequest.getDeadline());
         task.setUserId(addTaskRequest.getUserId());
-        task.setNotification(getNotification(addTaskRequest));
+        task.setNotification(addTaskRequest.getNotification());
 
         taskRepository.save(task);
         return task;
@@ -118,12 +105,12 @@ public class UserServiceImpl implements UserService {
         task.setPriority(updateTaskRequest.getPriority());
         task.setCompleted(updateTaskRequest.getCompleted());
         task.setDeadline(updateTaskRequest.getDeadline());
-        task.setId(task.getId());
+        task.setId(updateTaskRequest.getTaskId());
         return task;
     }
 
     @Override
-    public AddTaskResponse getReminders(AddTaskRequest addTaskRequest) {
+    public AddTaskResponse setReminders(AddTaskRequest addTaskRequest) {
         return notificationServiceImpl.setReminder(addTaskRequest);
     }
 
@@ -185,9 +172,5 @@ public class UserServiceImpl implements UserService {
         }
         return task;
     }
-
-
-
-
 
 }

@@ -26,11 +26,9 @@ public class UserServiceImplTest {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private AuthenticationService authenticationService;
-    private AddTaskRequest addTaskRequest;
-    @Autowired
     private TaskRepository taskRepository;
     private LoginRequest loginRequest;
+    private AddTaskRequest addTaskRequest;
     private CheckOutTaskRequest checkOutTaskRequest;
     private UpdateTaskRequest updateTaskRequest;
     private ChangePasswordRequest changePasswordRequest;
@@ -178,7 +176,7 @@ public class UserServiceImplTest {
         assertNotNull(addTaskResponse);
         assertEquals(1, taskRepository.count());
         boolean isSelected = true;
-        assertEquals("Approximately 30 minutes to complete task!", addTaskResponse.getNotification().getNoticeTypes().showMessage(isSelected));
+        assertEquals("Approximately 2 hours left to complete task!", addTaskResponse.getNotification().getNoticeTypes().showMessage(isSelected));
     }
 
     @Test
@@ -228,9 +226,9 @@ public class UserServiceImplTest {
         ChangePasswordResponse changePasswordResponse = userService.changePassword(changePasswordRequest);
         assertNotNull(changePasswordResponse);
 
-        LoginRequest loginRequest1 = new LoginRequest();
-        loginRequest1.setUsername("username");
-        loginRequest1.setPassword("password");
+        loginRequest = new LoginRequest();
+        loginRequest.setUsername("username");
+        loginRequest.setPassword("password");
         InvalidUsernameOrPasswordException exception = assertThrows(InvalidUsernameOrPasswordException.class, ()->userService.login(loginRequest));
         assertEquals("Invalid username or password", exception.getMessage());
     }
