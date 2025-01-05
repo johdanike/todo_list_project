@@ -1,8 +1,6 @@
 package org.africa.semicolon.todo_list.Enums;
 
-import lombok.Getter;
 
-@Getter
 public enum NoticeTypes {
     TWO_HOURS_TO_TIME("Approximately 2 hours left to complete task!"),
     ONE_HOUR_TO_TIME("Approximately 1 hour to complete task!"),

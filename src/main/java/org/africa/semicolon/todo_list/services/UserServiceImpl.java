@@ -1,5 +1,6 @@
 package org.africa.semicolon.todo_list.services;
 
+import org.africa.semicolon.todo_list.Enums.Status;
 import org.africa.semicolon.todo_list.data.models.Task;
 import org.africa.semicolon.todo_list.data.models.User;
 import org.africa.semicolon.todo_list.data.repositories.TaskRepository;
@@ -8,6 +9,7 @@ import org.africa.semicolon.todo_list.dtos.requests.*;
 import org.africa.semicolon.todo_list.dtos.responses.*;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -42,6 +44,8 @@ public class UserServiceImpl implements UserService {
         addTaskResponse.setUserId(addTaskRequest.getUserId());
         addTaskResponse.setMessage("Task successfully added");
         addTaskResponse.setNotification(addTaskRequest.getNotification());
+        addTaskResponse.setTaskStatus(addTaskRequest.getStatus());
+
 
         setReminders(addTaskRequest);
         return addTaskResponse;
@@ -57,6 +61,7 @@ public class UserServiceImpl implements UserService {
         task.setDeadline(addTaskRequest.getDeadline());
         task.setUserId(addTaskRequest.getUserId());
         task.setNotification(addTaskRequest.getNotification());
+        task.setStatus(Status.CREATED);
 
         taskRepository.save(task);
         return task;
@@ -93,6 +98,7 @@ public class UserServiceImpl implements UserService {
         updateTaskResponse.setTaskId(task.getId());
         updateTaskResponse.setTaskDescription(task.getDescription());
         updateTaskResponse.setTaskName(task.getTitle());
+        updateTaskResponse.setTaskStatus(task.getStatus());
         updateTaskResponse.setMessage("Task update Successful");
         return updateTaskResponse;
     }
@@ -106,6 +112,7 @@ public class UserServiceImpl implements UserService {
         task.setCompleted(updateTaskRequest.getCompleted());
         task.setDeadline(updateTaskRequest.getDeadline());
         task.setId(updateTaskRequest.getTaskId());
+        task.setStatus(updateTaskRequest.getTaskStatus());
         return task;
     }
 
@@ -155,6 +162,38 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<Task> findAll() {
         return taskRepository.findAll();
+    }
+
+    @Override
+    public List<Task> viewAllTasksInProgress() {
+        List<Task> inProgressTasks = new ArrayList<>();
+        try {
+            for (Task task : taskRepository.findAll()) {
+                if (task.getStatus().equals(Status.IN_PROGRESS)) {
+                    inProgressTasks.add(task);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error occurred while retrieving tasks: " + e.getMessage());
+        }
+        return inProgressTasks;
+    }
+
+
+    @Override
+    public List<Task> viewAllCompletedTasks() {
+        List<Task> completedTask = new ArrayList<>();
+        try {
+            for (Task task : taskRepository.findAll()) {
+                if (task.getStatus().equals(Status.COMPLETED)) {
+                    completedTask.add(task);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error occurred while retrieving tasks: " + e.getMessage());
+        }
+
+        return completedTask;
     }
 
     private User getCurrentUser(String username) {

@@ -2,6 +2,7 @@ package org.africa.semicolon.todo_list.dtos.responses;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.africa.semicolon.todo_list.Enums.Status;
 import org.africa.semicolon.todo_list.data.models.Notification;
 
 @Setter
@@ -11,7 +12,7 @@ public class AddTaskResponse {
     private String taskId;
     private String taskName;
     private String taskDescription;
-    private String taskStatus;
+    private Status taskStatus;
     private Notification notification;
     private String message;
 }

@@ -74,6 +74,18 @@ public class UserController {
         return new ResponseEntity<>(findAll, new HttpHeaders(), HttpStatus.OK);
     }
 
+    @GetMapping(value = "/viewAllCompletedTasks/")
+    public ResponseEntity<List<Task>> getAllCompletedTasks() {
+        List<Task> completedTasks = userService.viewAllCompletedTasks();
+        return new ResponseEntity<>(completedTasks, new HttpHeaders(), HttpStatus.OK);
+    }
+
+    @GetMapping("/viewAllTasksInProgress/ ")
+    public ResponseEntity<List<Task>> getAllTasksInProgress() {
+        List<Task> completedTasks = userService.viewAllTasksInProgress();
+        return new ResponseEntity<>(completedTasks, new HttpHeaders(), HttpStatus.OK);
+    }
+
 
 
 }

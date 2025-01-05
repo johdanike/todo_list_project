@@ -1,5 +1,6 @@
 package org.africa.semicolon.todo_list.services;
 
+import org.africa.semicolon.todo_list.Enums.Status;
 import org.africa.semicolon.todo_list.data.models.Task;
 import org.africa.semicolon.todo_list.dtos.requests.*;
 import org.africa.semicolon.todo_list.dtos.responses.*;
@@ -17,4 +18,6 @@ public interface UserService {
     ChangePasswordResponse changePassword(ChangePasswordRequest changePasswordRequest);
     DeleteTaskResponse deleteTask(DeleteTaskRequest deleteTaskRequest);
     List<Task> findAll();
+    List<Task> viewAllTasksInProgress();
+    List<Task> viewAllCompletedTasks();
 }
