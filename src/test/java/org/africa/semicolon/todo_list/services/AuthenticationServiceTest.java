@@ -2,7 +2,10 @@ package org.africa.semicolon.todo_list.services;
 
 import org.africa.semicolon.todo_list.data.repositories.UserRepository;
 import org.africa.semicolon.todo_list.dtos.requests.LoginRequest;
+import org.africa.semicolon.todo_list.dtos.requests.LogoutRequest;
 import org.africa.semicolon.todo_list.dtos.requests.SignUpRequest;
+import org.africa.semicolon.todo_list.dtos.responses.LogOutResponse;
+import org.africa.semicolon.todo_list.dtos.responses.LoginResponse;
 import org.africa.semicolon.todo_list.dtos.responses.SignUpResponse;
 import org.africa.semicolon.todo_list.exceptions.InvalidUsernameOrPasswordException;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,8 +73,8 @@ public class AuthenticationServiceTest {
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername("johdanike");
         loginRequest.setPassword("password");
-        Boolean loginResponse = authenticationService.login(loginRequest);
-        assertTrue(loginResponse);
+        LoginResponse loginResponse = authenticationService.login(loginRequest);
+        assertEquals("logged In Successfully", loginResponse.getMessage());
         assertTrue(userRepository.count() == 1);
     }
 
@@ -96,11 +99,14 @@ public class AuthenticationServiceTest {
         loginRequest.setUsername("johdanike");
         loginRequest.setPassword("password");
 
-        Boolean loginResponse = authenticationService.login(loginRequest);
-        assertTrue(loginResponse);
+        LoginResponse loginResponse = authenticationService.login(loginRequest);
+        assertEquals("Logged In Successfully", loginResponse.getMessage());
 
-        Boolean logOutResponse = authenticationService.logout();
-        assertTrue(logOutResponse);
+        LogoutRequest logoutRequest = new LogoutRequest();
+        logoutRequest.setUsername("johdanike");
+        logoutRequest.setPassword("password");
+        LogOutResponse  response = authenticationService.logout(logoutRequest);
+        assertEquals("Logout successful", response.getMessage() );
     }
 
 }

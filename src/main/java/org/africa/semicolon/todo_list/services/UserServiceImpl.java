@@ -44,9 +44,7 @@ public class UserServiceImpl implements UserService {
         addTaskResponse.setUserId(addTaskRequest.getUserId());
         addTaskResponse.setMessage("Task successfully added");
         addTaskResponse.setNotification(addTaskRequest.getNotification());
-        addTaskResponse.setTaskStatus(addTaskRequest.getStatus());
-
-
+        addTaskResponse.setTaskStatus(task.getStatus());
         setReminders(addTaskRequest);
         return addTaskResponse;
     }
@@ -63,18 +61,15 @@ public class UserServiceImpl implements UserService {
         task.setNotification(addTaskRequest.getNotification());
         task.setStatus(Status.CREATED);
 
-        taskRepository.save(task);
-        return task;
+        return taskRepository.save(task);
     }
 
     private void checkIfTaskExisted(String title) {
-        if (taskRepository.findTaskBy(title) != null) {
-            throw new IllegalArgumentException("Task already exists");
-        }
+        if (taskRepository.findTaskBy(title) != null) throw new IllegalArgumentException("Task already exists");
     }
 
     @Override
-    public boolean login(LoginRequest loginRequest) {
+    public LoginResponse login(LoginRequest loginRequest) {
         return authenticationServiceImpl.login(loginRequest);
     }
 
@@ -85,6 +80,7 @@ public class UserServiceImpl implements UserService {
         checkOutTaskResponse.setCompleted(checkOutTaskRequest.getCompleted());
         checkOutTaskResponse.setTaskName(checkOutTaskRequest.getTitle());
         checkOutTaskResponse.setMessage("Task completed");
+
         return checkOutTaskResponse;
     }
 
@@ -122,27 +118,35 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean logOut() {
-        return authenticationServiceImpl.logout();
+    public LogOutResponse logOut(LogoutRequest logoutRequest) {
+        return authenticationServiceImpl.logout(logoutRequest);
     }
 
     @Override
     public ChangePasswordResponse changePassword(ChangePasswordRequest changePasswordRequest) {
         User user = getCurrentUser(changePasswordRequest.getUsername());
+        
         if (user.isLoggedin()) {
             if (user.getPassword().equals(changePasswordRequest.getOldPassword())
                     && user.getUsername().equals(changePasswordRequest.getUsername())) {
-                if (!changePasswordRequest.getNewPassword().equals(changePasswordRequest.getConfirmPassword())) {
-                    throw new IllegalArgumentException("Passwords do not match");
-                }
+                isPasswordAMatch(changePasswordRequest);
+
                 user.setUsername(changePasswordRequest.getUsername());
                 user.setPassword(changePasswordRequest.getNewPassword());
                 user.setLoggedin(true);
-                User user1 = userRepository.save(user);
-                System.out.println(user1.getPassword());
+                userRepository.save(user);
             }
         }
-        return new ChangePasswordResponse();
+        ChangePasswordResponse changePasswordResponse = new ChangePasswordResponse();
+        changePasswordResponse.setMessage("Password successfully updated!");
+        changePasswordResponse.setSuccess(true);
+        changePasswordResponse.setUsername(user.getUsername());
+        return changePasswordResponse;
+    }
+
+    private static void isPasswordAMatch(ChangePasswordRequest changePasswordRequest) {
+        if (!changePasswordRequest.getNewPassword().equals(changePasswordRequest.getConfirmPassword()))
+            throw new IllegalArgumentException("Passwords do not match");
     }
 
     @Override
@@ -168,10 +172,9 @@ public class UserServiceImpl implements UserService {
     public List<Task> viewAllTasksInProgress() {
         List<Task> inProgressTasks = new ArrayList<>();
         try {
-            for (Task task : taskRepository.findAll()) {
-                if (task.getStatus().equals(Status.IN_PROGRESS)) {
+            for (Task task : taskRepository.findAll()){
+                if (task.getStatus().equals(Status.IN_PROGRESS))
                     inProgressTasks.add(task);
-                }
             }
         } catch (Exception e) {
             System.err.println("Error occurred while retrieving tasks: " + e.getMessage());
@@ -185,30 +188,24 @@ public class UserServiceImpl implements UserService {
         List<Task> completedTask = new ArrayList<>();
         try {
             for (Task task : taskRepository.findAll()) {
-                if (task.getStatus().equals(Status.COMPLETED)) {
+                if (task.getStatus().equals(Status.COMPLETED))
                     completedTask.add(task);
-                }
             }
         } catch (Exception e) {
             System.err.println("Error occurred while retrieving tasks: " + e.getMessage());
         }
-
         return completedTask;
     }
 
     private User getCurrentUser(String username) {
         User user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new IllegalArgumentException("User not found");
-        }
+        if (user == null) throw new IllegalArgumentException("User not found");
         return user;
     }
 
     private Task getCurrentTask(String title) {
         Task task = taskRepository.findTaskBy(title);
-        if (task == null) {
-            throw new IllegalArgumentException("Task not found");
-        }
+        if (task == null) throw new IllegalArgumentException("Task not found");
         return task;
     }
 

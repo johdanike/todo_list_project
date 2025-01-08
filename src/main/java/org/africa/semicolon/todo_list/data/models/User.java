@@ -8,6 +8,7 @@ import java.util.List;
 
 @Data
 @Document
+
 public class User {
     @Id
     private String id;

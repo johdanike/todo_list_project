@@ -18,7 +18,7 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
 
-    @PostMapping("/signup/")
+    @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody SignUpRequest signUpRequest) {
         try {
             SignUpResponse signUpResponse = userService.signUp(signUpRequest);
@@ -28,7 +28,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/addTask/")
+    @PostMapping("/addTask")
     public ResponseEntity<?> addTask(@RequestBody AddTaskRequest addTaskRequest) {
         try {
             AddTaskResponse addTaskResponse = userService.addTask(addTaskRequest);
@@ -38,17 +38,17 @@ public class UserController {
         }
     }
 
-    @PostMapping("/login/")
+    @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
-            Boolean loginResponse = userService.login(loginRequest);
+            LoginResponse loginResponse = userService.login(loginRequest);
             return new ResponseEntity<>(new AuthenticationApiResponse(true, loginResponse), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new AuthenticationApiResponse(false, e.getMessage()), HttpStatus.BAD_REQUEST);
         }
     }
 
-    @PutMapping("/updateTask/")
+    @PutMapping("/updateTask")
     public ResponseEntity<?> updateTask(@RequestBody UpdateTaskRequest updateTaskRequest) {
         try {
             UpdateTaskResponse updateTaskResponse = userService.updateTask(updateTaskRequest);
@@ -58,7 +58,7 @@ public class UserController {
         }
     }
 
-    @DeleteMapping("/deleteTask/")
+    @DeleteMapping("/deleteTask")
     public ResponseEntity<?> deleteTask(@RequestBody DeleteTaskRequest deleteTaskRequest) {
         try{
             DeleteTaskResponse deleteTaskResponse = userService.deleteTask(deleteTaskRequest);
@@ -68,19 +68,19 @@ public class UserController {
         }
     }
 
-    @RequestMapping(value = "/tasks/", method = RequestMethod.GET)
+    @RequestMapping(value = "/tasks", method = RequestMethod.GET)
     public ResponseEntity<List<Task>> getAllTasks() {
         List<Task> findAll = userService.findAll();
         return new ResponseEntity<>(findAll, new HttpHeaders(), HttpStatus.OK);
     }
 
-    @GetMapping(value = "/viewAllCompletedTasks/")
+    @GetMapping(value = "/viewAllCompletedTasks")
     public ResponseEntity<List<Task>> getAllCompletedTasks() {
         List<Task> completedTasks = userService.viewAllCompletedTasks();
         return new ResponseEntity<>(completedTasks, new HttpHeaders(), HttpStatus.OK);
     }
 
-    @GetMapping("/viewAllTasksInProgress/ ")
+    @GetMapping("/viewAllTasksInProgress")
     public ResponseEntity<List<Task>> getAllTasksInProgress() {
         List<Task> completedTasks = userService.viewAllTasksInProgress();
         return new ResponseEntity<>(completedTasks, new HttpHeaders(), HttpStatus.OK);

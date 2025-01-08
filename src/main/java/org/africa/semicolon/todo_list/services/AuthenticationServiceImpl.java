@@ -2,12 +2,17 @@ package org.africa.semicolon.todo_list.services;
 
 import org.africa.semicolon.todo_list.data.models.User;
 import org.africa.semicolon.todo_list.data.repositories.UserRepository;
+import org.africa.semicolon.todo_list.dtos.responses.LogOutResponse;
 import org.africa.semicolon.todo_list.dtos.requests.LoginRequest;
+import org.africa.semicolon.todo_list.dtos.requests.LogoutRequest;
 import org.africa.semicolon.todo_list.dtos.requests.SignUpRequest;
 import org.africa.semicolon.todo_list.dtos.responses.LoginResponse;
 import org.africa.semicolon.todo_list.dtos.responses.SignUpResponse;
-import org.africa.semicolon.todo_list.exceptions.InvalidUsernameOrPasswordException;
+import org.africa.semicolon.todo_list.exceptions.UserNotFoundException;
 import org.springframework.stereotype.Service;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class AuthenticationServiceImpl implements AuthenticationService {
@@ -36,26 +41,62 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public Boolean login(LoginRequest loginRequest) {
+    public LoginResponse login(LoginRequest loginRequest) {
         User user = userRepository.findByUsername(loginRequest.getUsername());
-        if (user == null || !user.getPassword().equals(loginRequest.getPassword()) || !user.getUsername().equals(loginRequest.getUsername())) {
-            throw new InvalidUsernameOrPasswordException("Invalid username or password");
-        }
-        LoginResponse loginResponse = new LoginResponse();
-        loginResponse.setMessage("Login successful");
-        loginResponse.setUsername(user.getUsername());
 
-        user.setLoggedin(true);
-        userRepository.save(user);
-        return user.isLoggedin();
+        if (isloginRequestEmptyOrNull(loginRequest) ||
+                containsWhiteSpace(loginRequest.getPassword()) ||
+                containsWhiteSpace(loginRequest.getUsername())) {
+            throw new IllegalArgumentException("Username or password fields cannot be empty and cannot contain any spaces");
+        }
+        if(user == null) {
+            throw new UserNotFoundException("User not found");
+        }
+
+        LoginResponse response = userDetailsIsCorrect_login(loginRequest, user);
+        if (response != null) {
+            userRepository.save(user);
+            return response;
+        }
+        throw new IllegalArgumentException("Invalid username or password");
+    }
+
+
+
+    private static LoginResponse userDetailsIsCorrect_login(LoginRequest loginRequest, User user) {
+        if (user.getUsername().equals(loginRequest.getUsername()) && user.getPassword().equals(loginRequest.getPassword())) {
+            user.setLoggedin(true);
+            LoginResponse response = new LoginResponse();
+            response.setUsername(user.getUsername());
+            response.setMessage("Logged In Successfully");
+
+            return response;
+        }
+        return null;
+    }
+
+    private static boolean isloginRequestEmptyOrNull(LoginRequest loginRequest) {
+        if( loginRequest.getPassword() == null ||
+                loginRequest.getUsername().isEmpty() ||
+                loginRequest.getPassword().isEmpty())
+            return true;
+        return false;
+    }
+
+    private static boolean containsWhiteSpace(String string){
+        Pattern pattern = Pattern.compile("(.*?)\\s(.*?)");
+        Matcher matcher = pattern.matcher(string);
+        return matcher.find();
     }
 
     @Override
-    public Boolean logout() {
-        User user = new User();
+    public LogOutResponse logout(LogoutRequest logoutRequest){
+        User user = getCurrentUser(logoutRequest.getUsername());
         user.setLoggedin(false);
+        LogOutResponse logOutResponse = new LogOutResponse();
+        logOutResponse.setMessage("Logout successful");
         userRepository.save(user);
-        return true;
+        return logOutResponse;
     }
     private User getCurrentUser(String username) {
         User user = userRepository.findByUsername(username);
@@ -64,7 +105,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
         return user;
     }
-
 
     private void checkIfUserAlreadyExists(String username) {
         if (userRepository.findByUsername(username) != null && userRepository.findByUsername(username).getEmail() != null) {

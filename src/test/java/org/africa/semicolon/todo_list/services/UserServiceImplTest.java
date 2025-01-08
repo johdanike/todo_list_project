@@ -7,14 +7,11 @@ import org.africa.semicolon.todo_list.data.repositories.TaskRepository;
 import org.africa.semicolon.todo_list.data.repositories.UserRepository;
 import org.africa.semicolon.todo_list.dtos.requests.*;
 import org.africa.semicolon.todo_list.dtos.responses.*;
-import org.africa.semicolon.todo_list.exceptions.InvalidUsernameOrPasswordException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-
 import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 
@@ -74,9 +71,9 @@ public class UserServiceImplTest {
 
         changePasswordRequest = new ChangePasswordRequest();
         changePasswordRequest.setUsername("username");
-        changePasswordRequest.setOldPassword(signUpRequest.getPassword());
-        changePasswordRequest.setNewPassword("johndaniel");
-        changePasswordRequest.setConfirmPassword("johndaniel");
+        changePasswordRequest.setOldPassword("password");
+        changePasswordRequest.setNewPassword("john-daniel");
+        changePasswordRequest.setConfirmPassword("john-daniel");
 
     }
 
@@ -86,7 +83,6 @@ public class UserServiceImplTest {
         assertEquals(1, userRepository.count());
         assertNotNull(signUpResponse);
     }
-
     @Test
     public void userRegistersUsingSameDetails_throwsException_test(){
         SignUpResponse signUpResponse = userService.signUp(signUpRequest);
@@ -98,29 +94,29 @@ public class UserServiceImplTest {
         assertEquals("Account already exists", exception.getMessage());
         assertEquals(1, userRepository.count());
     }
-
     @Test
     public void userCanAddTasks_test(){
         SignUpResponse signUpResponse = userService.signUp(signUpRequest);
         assertNotNull(signUpResponse);
         assertEquals(1, userRepository.count());
 
-        assertTrue(userService.login(loginRequest));
-
+        LoginResponse loginResponse = userService.login(loginRequest);
+        assertEquals("Logged In Successfully", loginResponse.getMessage());
         AddTaskResponse addTaskResponse = userService.addTask(addTaskRequest);
-        assertNotNull(addTaskResponse);
-    }
+        assertEquals("Finish my To-Do app build", addTaskResponse.getTaskName());
 
+    }
     @Test
     public void userCanCheckOutCompletedTasks_test(){
         SignUpResponse signUpResponse = userService.signUp(signUpRequest);
         assertNotNull(signUpResponse);
         assertEquals(1, userRepository.count());
 
-        assertTrue(userService.login(loginRequest));
+        LoginResponse loginResponse = userService.login(loginRequest);
+        assertEquals("Logged In Successfully", loginResponse.getMessage());
 
         AddTaskResponse addTaskResponse = userService.addTask(addTaskRequest);
-        assertNotNull(addTaskResponse);
+        assertEquals("Finish my To-Do app build", addTaskResponse.getTaskName());
 
         checkOutTaskRequest.setTaskId(addTaskResponse.getTaskId());
         CheckOutTaskResponse checkOutTaskResponse = userService.checkOutTask(checkOutTaskRequest);
@@ -128,7 +124,6 @@ public class UserServiceImplTest {
         assertEquals("Task completed",checkOutTaskResponse.getMessage());
         assertEquals(1, taskRepository.count());
     }
-
     @Test
     public void userCannotAddSameTaskTwice_throwsException_test(){
         SignUpResponse signUpResponse = userService.signUp(signUpRequest);
@@ -136,16 +131,16 @@ public class UserServiceImplTest {
         assertEquals(1, userRepository.count());
         assertEquals(signUpRequest.getUsername(), signUpResponse.getUsername());
 
-        assertTrue(userService.login(loginRequest));
+        LoginResponse loginResponse = userService.login(loginRequest);
+        assertEquals("Logged In Successfully", loginResponse.getMessage());
 
         AddTaskResponse addTaskResponse = userService.addTask(addTaskRequest);
-        assertNotNull(addTaskResponse);
+        assertEquals("Finish my To-Do app build", addTaskResponse.getTaskName());
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, ()->userService.addTask(addTaskRequest));
         assertEquals("Task already exists", exception.getMessage());
         assertEquals(1, taskRepository.count());
     }
-
     @Test
     public void userCanUpdateTask_test(){
         SignUpResponse signUpResponse = userService.signUp(signUpRequest);
@@ -153,10 +148,11 @@ public class UserServiceImplTest {
         assertEquals(1, userRepository.count());
         assertEquals(signUpRequest.getUsername(), signUpResponse.getUsername());
 
-        assertTrue(userService.login(loginRequest));
+        LoginResponse loginResponse = userService.login(loginRequest);
+        assertEquals("Logged In Successfully", loginResponse.getMessage());
 
         AddTaskResponse addTaskResponse = userService.addTask(addTaskRequest);
-        assertNotNull(addTaskResponse);
+        assertEquals("Finish my To-Do app build", addTaskResponse.getTaskName());
 
         updateTaskRequest.setTaskId(addTaskResponse.getTaskId());
         UpdateTaskResponse updateTaskResponse = userService.updateTask(updateTaskRequest);
@@ -164,81 +160,94 @@ public class UserServiceImplTest {
         assertEquals("Task update Successful", updateTaskResponse.getMessage());
         assertEquals(1, taskRepository.count());
     }
-
     @Test
     public void tasksAdded_notificationCanBeSent_test(){
         SignUpResponse signUpResponse = userService.signUp(signUpRequest);
         assertNotNull(signUpResponse);
 
-        assertTrue(userService.login(loginRequest));
+
+        LoginResponse loginResponse = userService.login(loginRequest);
+        assertEquals("Logged In Successfully", loginResponse.getMessage());
 
         AddTaskResponse addTaskResponse = userService.addTask(addTaskRequest);
-        assertNotNull(addTaskResponse);
+        assertEquals("Finish my To-Do app build", addTaskResponse.getTaskName());
         assertEquals(1, taskRepository.count());
         boolean isSelected = true;
         assertEquals("Approximately 2 hours left to complete task!", addTaskResponse.getNotification().getNoticeTypes().showMessage(isSelected));
     }
-
     @Test
     public void loggedInUserCanLogOut_test(){
         SignUpResponse signUpResponse = userService.signUp(signUpRequest);
         assertNotNull(signUpResponse);
-        assertTrue(userService.login(loginRequest));
-        AddTaskResponse addTaskResponse = userService.addTask(addTaskRequest);
-        assertNotNull(addTaskResponse);
-        assertEquals(1, taskRepository.count());
-        assertTrue(userService.logOut());
-    }
 
+        LoginResponse loginResponse = userService.login(loginRequest);
+        assertEquals("Logged In Successfully", loginResponse.getMessage());
+
+        AddTaskResponse addTaskResponse = userService.addTask(addTaskRequest);
+        assertEquals("Finish my To-Do app build", addTaskResponse.getTaskName());
+
+        assertEquals(1, taskRepository.count());
+        LogoutRequest logoutRequest = new LogoutRequest();
+        logoutRequest.setUsername(loginRequest.getUsername());
+        logoutRequest.setPassword(loginRequest.getPassword());
+        LogOutResponse logoutResponse = userService.logOut(logoutRequest);
+        String message = logoutResponse.getMessage();
+        assertEquals("Logout successful", userService.logOut(logoutRequest).getMessage());
+    }
     @Test
     public void userCanChangePassword_test(){
         SignUpResponse signUpResponse = userService.signUp(signUpRequest);
         assertNotNull(signUpResponse);
 
-        assertTrue(userService.login(loginRequest));
-
+        LoginResponse loginResponse = userService.login(loginRequest);
+        assertEquals("Logged In Successfully", loginResponse.getMessage());
         ChangePasswordResponse changePasswordResponse = userService.changePassword(changePasswordRequest);
         assertNotNull(changePasswordResponse);
+        assertEquals("Password successfully updated!", changePasswordResponse.getMessage());
     }
-
     @Test
     public void userCanLoginWithNewPassword_test(){
         SignUpResponse signUpResponse = userService.signUp(signUpRequest);
         assertNotNull(signUpResponse);
 
-        assertTrue(userService.login(loginRequest));
+        LoginResponse loginResponse = userService.login(loginRequest);
+        assertEquals("Logged In Successfully", loginResponse.getMessage());
 
         ChangePasswordResponse changePasswordResponse = userService.changePassword(changePasswordRequest);
         assertNotNull(changePasswordResponse);
+        assertEquals("username", changePasswordResponse.getUsername());
 
-        LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setUsername("username");
-        loginRequest.setPassword("johndaniel");
-        assertTrue(userService.login(loginRequest));
+        LoginRequest loginRequest1 = new LoginRequest();
+        loginRequest1.setUsername("username");
+        loginRequest1.setPassword("john-daniel");
+
+        LoginResponse loginResponse2 = userService.login(loginRequest1);
+        assertEquals("Logged In Successfully", loginResponse2.getMessage());
     }
-
     @Test
     public void userCannotLoginWithOldPassword_test(){
         SignUpResponse signUpResponse = userService.signUp(signUpRequest);
         assertNotNull(signUpResponse);
 
-        assertTrue(userService.login(loginRequest));
+        LoginResponse loginResponse = userService.login(loginRequest);
+        assertEquals("Logged In Successfully", loginResponse.getMessage());
+
         ChangePasswordResponse changePasswordResponse = userService.changePassword(changePasswordRequest);
         assertNotNull(changePasswordResponse);
 
         loginRequest = new LoginRequest();
         loginRequest.setUsername("username");
         loginRequest.setPassword("password");
-        InvalidUsernameOrPasswordException exception = assertThrows(InvalidUsernameOrPasswordException.class, ()->userService.login(loginRequest));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, ()->userService.login(loginRequest));
         assertEquals("Invalid username or password", exception.getMessage());
     }
-
     @Test
     public void userCanDeleteTask_test(){
         SignUpResponse signUpResponse = userService.signUp(signUpRequest);
         assertNotNull(signUpResponse);
 
-        assertTrue(userService.login(loginRequest));
+        LoginResponse loginResponse = userService.login(loginRequest);
+        assertEquals("Logged In Successfully", loginResponse.getMessage());
 
         AddTaskResponse addTaskResponse = userService.addTask(addTaskRequest);
         assertNotNull(addTaskResponse);
@@ -251,25 +260,26 @@ public class UserServiceImplTest {
         assertNotNull(deleteTaskResponse);
         assertEquals(0, taskRepository.count());
 
-
         List<Task> tasks = taskRepository.findAll();
         assertNotNull(tasks);
         assertEquals(0, tasks.size());
     }
-
     @Test
     public void userCanViewAllTasks_test(){
         SignUpResponse signUpResponse = userService.signUp(signUpRequest);
         assertNotNull(signUpResponse);
         assertEquals(1, userRepository.count());
 
-        assertTrue(userService.login(loginRequest));
+
+        LoginResponse loginResponse = userService.login(loginRequest);
+        assertEquals("Logged In Successfully", loginResponse.getMessage());
+
         AddTaskResponse addTaskResponse = userService.addTask(addTaskRequest);
         assertNotNull(addTaskResponse);
 
         List<Task> tasks = userService.findAll();
         assertNotNull(tasks);
-        System.out.println(tasks);
+//        System.out.println(tasks);
         assertEquals(1, tasks.size());
     }
 }

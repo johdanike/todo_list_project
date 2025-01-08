@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 public class NotificationController {
     private final NotificationService notificationService;
 
-    @GetMapping("/setNotification/")
+    @GetMapping("/setNotification")
     public ResponseEntity<String> setNotification(@RequestBody AddTaskRequest addTaskRequest) {
         try {
             AddTaskResponse addTaskResponse = notificationService.setReminder(addTaskRequest);
