@@ -76,11 +76,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private static boolean isloginRequestEmptyOrNull(LoginRequest loginRequest) {
-        if( loginRequest.getPassword() == null ||
+        return loginRequest.getPassword() == null ||
                 loginRequest.getUsername().isEmpty() ||
-                loginRequest.getPassword().isEmpty())
-            return true;
-        return false;
+                loginRequest.getPassword().isEmpty();
     }
 
     private static boolean containsWhiteSpace(String string){

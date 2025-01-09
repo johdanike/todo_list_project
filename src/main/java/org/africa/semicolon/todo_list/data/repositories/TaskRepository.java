@@ -8,5 +8,6 @@ import java.util.List;
 
 public interface TaskRepository extends MongoRepository<Task, String> {
     Task findTaskBy(String title);
+    Task findTaskByTitle(String title);
     List<Task> findAllBy(Status status);
 }

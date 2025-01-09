@@ -65,7 +65,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private void checkIfTaskExisted(String title) {
-        if (taskRepository.findTaskBy(title) != null) throw new IllegalArgumentException("Task already exists");
+        if (taskRepository.findTaskByTitle(title) == null) throw new IllegalArgumentException("Task already exists");
     }
 
     @Override

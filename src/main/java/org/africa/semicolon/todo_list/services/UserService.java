@@ -14,8 +14,6 @@ public interface UserService {
     CheckOutTaskResponse checkOutTask(CheckOutTaskRequest checkOutTaskRequest);
     UpdateTaskResponse updateTask(UpdateTaskRequest updateTaskRequest);
     AddTaskResponse setReminders(AddTaskRequest addTaskRequest);
-//    boolean logOut();
-
     LogOutResponse logOut(LogoutRequest logoutRequest);
 
     ChangePasswordResponse changePassword(ChangePasswordRequest changePasswordRequest);

@@ -36,6 +36,18 @@ public class NotificationServiceImpl implements NotificationService {
         return addTaskResponse;
     }
 
+    @Override
+    public AddTaskResponse setNewReminder(AddTaskRequest addTaskRequest) {
+        validateCurrentUserAndCurrentTask currentUserAndTask = getValidateCurrentUserAndCurrentTask(addTaskRequest);
+
+//        if (addTaskRequest.getNotification()){
+//            Notification notification = new Notification();
+//            notification.setTaskId(currentUserAndTask.currentTask().getId());
+//
+//        }
+        return setReminder(addTaskRequest);
+    }
+
     private validateCurrentUserAndCurrentTask getValidateCurrentUserAndCurrentTask(AddTaskRequest addTaskRequest) {
         if (addTaskRequest.getNotification() == null)
             addTaskRequest.setNotification(new Notification());

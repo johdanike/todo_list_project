@@ -13,6 +13,7 @@ public class AddTaskRequest {
     private String description;
     private String priority;
     private Notification notification;
+//    private Boolean notification;
     private String deadline;
     private String userId;
 

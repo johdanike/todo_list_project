@@ -104,7 +104,6 @@ public class UserServiceImplTest {
         assertEquals("Logged In Successfully", loginResponse.getMessage());
         AddTaskResponse addTaskResponse = userService.addTask(addTaskRequest);
         assertEquals("Finish my To-Do app build", addTaskResponse.getTaskName());
-
     }
     @Test
     public void userCanCheckOutCompletedTasks_test(){
@@ -191,8 +190,7 @@ public class UserServiceImplTest {
         logoutRequest.setUsername(loginRequest.getUsername());
         logoutRequest.setPassword(loginRequest.getPassword());
         LogOutResponse logoutResponse = userService.logOut(logoutRequest);
-        String message = logoutResponse.getMessage();
-        assertEquals("Logout successful", userService.logOut(logoutRequest).getMessage());
+        assertEquals("Logout successful", logoutResponse.getMessage());
     }
     @Test
     public void userCanChangePassword_test(){
@@ -270,7 +268,6 @@ public class UserServiceImplTest {
         assertNotNull(signUpResponse);
         assertEquals(1, userRepository.count());
 
-
         LoginResponse loginResponse = userService.login(loginRequest);
         assertEquals("Logged In Successfully", loginResponse.getMessage());
 
@@ -279,7 +276,6 @@ public class UserServiceImplTest {
 
         List<Task> tasks = userService.findAll();
         assertNotNull(tasks);
-//        System.out.println(tasks);
         assertEquals(1, tasks.size());
     }
 }
